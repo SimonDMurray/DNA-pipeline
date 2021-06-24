@@ -1,0 +1,16 @@
+sudo apt-get install -y fastqc
+sudo apt-get install -y trimmomatic
+sudo apt-get install -y libncurses5 #for samtools
+sudo apt-get install -y vcftools
+
+conda install -c bioconda -y soapec
+conda install -c bioconda -y samtools
+conda install -c bioconda -y bwa
+conda install -c bioconda -y freebayes
+conda install -c bioconda -y qualimap
+conda install -c bioconda -y gatk4
+
+
+git clone https://github.com/broadinstitute/picard.git
+cd picard/
+./gradlew shadowJar

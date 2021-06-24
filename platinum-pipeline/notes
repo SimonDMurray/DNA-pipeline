@@ -1,0 +1,7 @@
+output fastq.gz in trimmomatic not fastq as takes up less space and quicker
+using reference Homo_sapiens_assembly38.fasta
+dont need soapec bc not doing reassembly
+https://console.cloud.google.com/storage/browser/genomics-public-data/resources/broad/hg38/v0;tab=objects?prefix=&forceOnObjectsSortingFiltering=false&authuser=1&ref=https:%2F%2Faccounts.google.com%2Fsignin%2Fcontinue&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22)) -- source for resources
+no trimming needed as platinum genome
+need to do BaseRecalibration and BQSR before Haplotype caller to refine data further into high quality
+removed genomic intervals in haplotypecaller to cover entire genome
