@@ -4,4 +4,8 @@ dont need soapec bc not doing reassembly
 https://console.cloud.google.com/storage/browser/genomics-public-data/resources/broad/hg38/v0;tab=objects?prefix=&forceOnObjectsSortingFiltering=false&authuser=1&ref=https:%2F%2Faccounts.google.com%2Fsignin%2Fcontinue&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22)) -- source for resources
 no trimming needed as platinum genome
 need to do BaseRecalibration and BQSR before Haplotype caller to refine data further into high quality
-removed genomic intervals in haplotypecaller to cover entire genome
+removed genomic intervals in haplotypecaller to cover entire genome, speed isnt issue as data is higher quality due to further refinement
+reference genome has extra genomic information for known chromosome regions that are counted as separate chromosomes, these are removed
+need to use difference version of java for fastqc so need to change path variable at one point
+in bash script used relative paths so someone could implement pipeline from a clone (assuming all installs were correct) without having to change paths (although PATH variable would need to be updated)
+commandline results and galaxy results share 3 genomice loci, command line has 4 total genomic loci, galaxy has 5 total genomic loci. Command line includes some extra known indel removals so this could be reason
