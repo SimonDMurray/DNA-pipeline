@@ -17,7 +17,6 @@ process getFastq {
 	'''
 }
 
-/*
 process runFastqc {
 	
 	echo true
@@ -32,16 +31,12 @@ process runFastqc {
 
 	shell:
 	'''
-	JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64/bin"
-	PATH="/usr/lib:/opt/conda/condabin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/rstudio-server/bin"   
-	#which java
-	#echo $PATH
-	#echo "running fastq analysis"
+	echo "running fastq analysis"
         fastqc SRR1518011_1.fastq.gz SRR1518011_2.fastq.gz
-	#PATH="/opt/conda/bin:/opt/conda/condabin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/rstudio-server/bin"
 	'''
 }
 
+/*
 process removePrimersAdapters {
 	
 	echo true
@@ -114,6 +109,7 @@ process indexReference1 {
         bwa index /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
 	'''
 }
+*/
 
 process alignSequence {
 
@@ -137,6 +133,7 @@ process alignSequence {
 	'''
 }
 
+/*
 process convertSam {
 
 	echo true
