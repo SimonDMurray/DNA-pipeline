@@ -4,64 +4,70 @@ process getFastq {
 	
 	echo true
 
-	shell:
-	'''
-	mkdir -p fastq_data
-	if [ ! -f "fastq_data/SRR1518011_1.fastq.gz" ]; then
-        	echo "fastq_data/SRR1518011_1.fastq.gz does not exist. Downloading now."
-        	wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR151/001/SRR1518011/SRR1518011_1.fastq.gz -O fastq_data/SRR1518011_1.fastq.gz
-	else
-        	echo "fastq_data/SRR1518011_1.fastq.gz exists. Skipping download."
-	fi
-	if [ ! -f "fastq_data/SRR1518011_2.fastq.gz" ]; then
-        	echo "fastq_data/SRR1518011_2.fastq.gz does not exist. Downloading now."
-        	wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR151/001/SRR1518011/SRR1518011_2.fastq.gz -O fastq_data/SRR1518011_2.fastq.gz
-	else
-        	echo "fastq_data/SRR1518011_2.fastq.gz exists. Skipping download."
-	fi
-	'''
-}
+	output:
+	file 'SRR1518011_1.fastq.gz' into ch_getfastq_1
+	file 'SRR1518011_2.fastq.gz' into ch_getfastq_2
 
-process runFastqc {
-	
-	echo true
-	
 	shell:
 	'''
-	PATH="/usr/lib/:/opt/conda/condabin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/rstudio-server/bin"
-	if [ ! -d "qc/fastq-output" ]; then
-        	echo "running fastq analysis"
-        	mkdir -p qc/fastq-output/
-        	fastqc fastq_data/SRR1518011_1.fastq.gz fastq_data/SRR1518011_2.fastq.gz -o qc/fastq-output/
-        	unzip qc/fastq-output/SRR1518011_1_fastqc.zip -d qc/fastq-output/zip_output/
-        	unzip qc/fastq-output/SRR1518011_2_fastqc.zip -d qc/fastq-output/zip_output/
-	else
-        	echo "fastq analysis already run"
-	fi
-	PATH="/opt/conda/bin:/opt/conda/condabin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/rstudio-server/bin"
+        echo "Downloading SRR1518011_1."
+        wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR151/001/SRR1518011/SRR1518011_1.fastq.gz
+        echo "Downloading SRR1518011_2."
+	wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR151/001/SRR1518011/SRR1518011_2.fastq.gz
 	'''
 }
 
 /*
-process removePrimersAdapters {
+process runFastqc {
 	
 	echo true
 	
+	input:
+	file 'SRR1518011_1.fastq.gz' from ch_getfastq_1
+	file 'SRR1518011_2.fastq.gz' from ch_getfastq_2
+		
+	output:
+	file 'SRR1518011_1.fastq.gz' into ch_runfastqc_1
+        file 'SRR1518011_2.fastq.gz' into ch_runfastqc_2
+
 	shell:
 	'''
-	if [ ! -d "qc/trim" ]; then
-      		echo "trimming adapters and primers"
-      	 	mkdir -p qc/trim/logs
-       		mkdir -p qc/trim/paired
-       		mkdir -p qc/trim/unpaired
-       		TrimmomaticPE -threads 1 -phred33 -trimlog qc/trim/logs/trimm_logfile \
-       		fastq_data/SRR61518011_1.fastq.gz fastq_data/SRR61518011_2.fastq.gz \
-       		qc/trim/paired/SRR61518011_1_paired.fastq.gz qc/trim/unpaired/SRR61518011_2_unpaired.fastq.gz \
-       		qc/trim/paired/SRR61518011_2_paired.fastq.gz qc/trim/unpaired/SRR61518011_2_unpaired.fastq.gz \
-       		ILLUMINACLIP:../resources/primers_adapters.fa:2:30:10 MINLEN:36
-	else
-       		echo "trimming adapters and primers has already occured"
-	fi
+	JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64/bin"
+	PATH="/usr/lib:/opt/conda/condabin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/rstudio-server/bin"   
+	#which java
+	#echo $PATH
+	#echo "running fastq analysis"
+        fastqc SRR1518011_1.fastq.gz SRR1518011_2.fastq.gz
+	#PATH="/opt/conda/bin:/opt/conda/condabin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/rstudio-server/bin"
+	'''
+}
+
+process removePrimersAdapters {
+	
+	echo true
+
+	when:
+    	params.trimpa
+
+	input:
+        file 'SRR1518011_1.fastq.gz' from ch_getfastq_1
+        file 'SRR1518011_2.fastq.gz' from ch_getfastq_2
+
+        output:
+        file 'qc/trim/paired/SRR1518011_1_paired.fastq.gz' into ch_removepa_1
+        file 'qc/trim/paired/SRR1518011_2_paired.fastq.gz' into ch_removepa_2
+	
+	shell:
+	'''
+      	echo "trimming adapters and primers"
+      	mkdir -p qc/trim/logs
+       	mkdir -p qc/trim/paired
+       	mkdir -p qc/trim/unpaired
+       	TrimmomaticPE -threads 1 -phred33 -trimlog qc/trim/logs/trimm_logfile \
+       	SRR1518011_1.fastq.gz SRR1518011_2.fastq.gz \
+       	qc/trim/paired/SRR1518011_1_paired.fastq.gz qc/trim/unpaired/SRR1518011_2_unpaired.fastq.gz \
+       	qc/trim/paired/SRR1518011_2_paired.fastq.gz qc/trim/unpaired/SRR1518011_2_unpaired.fastq.gz \
+       	ILLUMINACLIP:/home/jovyan/coursework-pipeline/resources/primers_adapters.fa:2:30:10 MINLEN:36
 	'''
 }
 
@@ -69,58 +75,65 @@ process trimLowQuality {
 
 	echo true
 
+	when:
+        params.trimlq
+
+	input:
+	file 'SRR1518011_1_paired.fastq.gz' from ch_removepa_1
+        file 'SRR1518011_2_paired.fastq.gz' from ch_removepa_2
+
+	output:
+	file 'qc/trim2/paired/SRR1518011_1_PE_trimmed_adapter_removed.fastq.gz' into ch_trimlq1
+	file 'qc/trim2/paired/SRR1518011_2_PE_trimmed_adapter_removed.fastq.gz' into ch_trimlq2
+	
 	shell:
 	'''
-	if [ ! -d "qc/trim2" ]; then
-       		echo "trimming low quality reads"
-       		mkdir -p qc/trim2/logs
-       		mkdir -p qc/trim2/paired
-       		mkdir -p qc/trim2/unpaired
-       		TrimmomaticPE -threads 1 -phred33 -trimlog qc/trim2/logs/trimm_logfile \
-       		qc/trim/paired/SRR61518011_1_paired.fastq.gz qc/trim/paired/SRR61518011_2_paired.fastq.gz \
-       		qc/trim2/paired/SRR61518011_1_PE_trimmed_adapter_removed.fastq.gz qc/trim2/unpaired/SRR61518011_1_UP_trimmed_adapter_removed.fastq.gz \
-       		qc/trim2/paired/SRR61518011_2_PE_trimmed_adapter_removed.fastq.gz qc/trim2/unpaired/SRR61518011_2_UP_trimmed_adapter_removed.fastq.gz \
-       		LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
-	else
-        	echo "trimming low quality reads has already occured"
-	fi
+       	echo "trimming low quality reads"
+       	mkdir -p qc/trim2/logs
+       	mkdir -p qc/trim2/paired
+       	mkdir -p qc/trim2/unpaired
+       	TrimmomaticPE -threads 1 -phred33 -trimlog qc/trim2/logs/trimm_logfile \
+       	SRR1518011_1_paired.fastq.gz SRR1518011_2_paired.fastq.gz \
+       	qc/trim2/paired/SRR1518011_1_PE_trimmed_adapter_removed.fastq.gz qc/trim2/unpaired/SRR1518011_1_UP_trimmed_adapter_removed.fastq.gz \
+       	qc/trim2/paired/SRR1518011_2_PE_trimmed_adapter_removed.fastq.gz qc/trim2/unpaired/SRR1518011_2_UP_trimmed_adapter_removed.fastq.gz \
+       	LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
 	'''
 }
-*/
 
 process indexReference1 {
 	
 	echo
 
+        when:
+        params.bwaindex
+
 	shell:
 	'''
-	if [ ! -f "../resources/reference/reference-genome.fasta.bwt" ]; then
-        	echo "indexing reference genome"
-        	bwa index /home/jovyan/resources/reference/reference-genome.fasta
-	else
-        	echo "genome already indexed"
-	fi
+	PATH="/opt/conda/bin:/opt/conda/condabin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/rstudio-server/bin"
+	echo "indexing reference genome"
+        bwa index /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
 	'''
 }
 
 process alignSequence {
 
 	echo true
+	
+	input:
+        file 'SRR1518011_1.fastq.gz' from ch_runfastqc_1
+        file 'SRR1518011_2.fastq.gz' from ch_runfastqc_2
+
+	output:
+	file 'initial-output.sam' into ch_alignsequence	
 
 	shell:
 	'''
-	if [ ! -d "alignment/bwa_mem" ]; then
-        	echo "aligning sequence"
-        	mkdir -p alignment/bwa_mem/
-        	cd alignment/bwa_mem/
-        	bwa mem -t 8 -R '@RG\tID:identifier\tLB:library\tPL:platform\tPU:platform-unit\tSM:sample-name' \
-        	../../../resources/reference/reference-genome.fasta \
-        	../../fastq_data/SRR1518011_1.fastq.gz \
-        	../../fastq_data/SRR1518011_2.fastq.gz > initial-output.sam
-        	cd ../../
-	else
-        	echo "alignment already done"
-	fi
+	PATH="/opt/conda/bin:/opt/conda/condabin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/rstudio-server/bin"
+        echo "aligning sequence"
+        bwa mem -t 8 -R '@RG\tID:identifier\tLB:library\tPL:platform\tPU:platform-unit\tSM:sample-name' \
+        /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta \
+       	SRR1518011_1.fastq.gz \
+        SRR1518011_2.fastq.gz > initial-output.sam
 	'''
 }
 
@@ -128,16 +141,16 @@ process convertSam {
 
 	echo true
 
+	input:
+	file 'initial-output.sam' from ch_alignsequence
+
+	output:
+	file 'initial-output.bam' into ch_convertsam	
+
 	shell:
 	'''
-	if [ ! -f "alignment/bwa_mem/initial-output.bam" ]; then
-        	echo "converting sam to bam"
-        	cd alignment/bwa_mem/
-        	samtools view -b initial-output.sam -o initial-output.bam
-        	cd ../../
-	else
-        	echo "conversion already happened"
-	fi
+        echo "converting sam to bam"
+        samtools view -b initial-output.sam -o initial-output.bam
 	'''
 }
 
@@ -145,16 +158,16 @@ process alignBam {
 
 	echo true
 
+	input:
+	file 'initial-output.bam' from ch_convertsam
+
+	output:
+	file 'sorted-file.bam' into ch_alignbam
+	
 	shell:
-	if [ ! -d "alignment/sorted_files/" ]; then
-        	echo "sorting bam"
-        	mkdir -p alignment/sorted_files/
-        	cd alignment/sorted_files/
-        	samtools sort ../bwa_mem/initial-output.bam -o sorted-file.bam
-        	cd ../../
-	else
-        	echo "bam already sorted"
-	fi
+	'''
+        echo "sorting bam"
+        samtools sort initial-output.bam -o sorted-file.bam
 	'''
 }
 
@@ -162,15 +175,17 @@ process indexBam1 {
 
 	echo true
 
+	input:
+	file 'sorted-file.bam' from ch_alignbam
+
+	output:
+	file 'sorted-file.bam' into ch_indexbam
+	file 'sorted-file.bam.bai' into ch_indexbai	
+	
 	shell:
 	'''
-	if [ ! -f "alignment/sorted_files/sorted-file.bam.bai" ]; then
-        	echo "indexing bam"
-        	cd alignment/sorted_files/
-        	samtools index sorted-file.bam
-        	cd ../../
-	else
-        	echo "bam already indexed"
+        echo "indexing bam"
+        samtools index sorted-file.bam
 	fi
 	'''
 }
@@ -178,18 +193,19 @@ process indexBam1 {
 process runFlagstat {
 
 	echo true
+	
+	input:
+	file 'sorted-file.bam' from ch_indexbam
+	file 'sorted-file.bam.bai' from ch_indexbai
+
+	output:
+	file 'sorted-file.bam' into ch_runflagstat_bam
+	file 'sorted-file.bam.bai' into ch_runflagstat_bai
 
 	shell:
 	'''
-	if [ ! -f "alignment/flagstats/flagstat.txt" ]; then
-        	echo "generating stats"
-        	mkdir -p alignment/flagstats/
-        	cd alignment/flagstats/
-        	samtools flagstat ../sorted_files/sorted-file.bam > flagstat.txt
-        	cd ../../
-	else
-        	echo "stats already generated"
-	fi
+        echo "generating stats"
+        samtools flagstat sorted-file.bam > flagstat.txt
 	'''
 }
 
@@ -197,17 +213,17 @@ process markingDuplicates {
 
 	echo true
 
+	input:
+	file 'sorted-file.bam' from ch_runflagstat_bam
+	file 'sorted-file.bam.bai' from ch_indexbai_bai	
+
+	output:
+	file 'removed-duplicates.bam' into ch_markingduplicates
+
 	shell:
 	'''
-	if [ ! -d "refinement/duplicates" ]; then
-        	echo "marking duplicates"
-        	mkdir -p refinement/duplicates
-        	cd refinement/duplicates
-        	java -jar ~/bin/picard/build/libs/picard.jar MarkDuplicates INPUT=../../alignment/sorted_files/sorted-file.bam OUTPUT=removed-duplicates.bam METRICS_FILE=duplicate-metrics.txt
-        	cd ../../
-	else
-        	echo "duplicates marked"
-	fi
+        echo "marking duplicates"
+        java -jar ~/bin/picard/build/libs/picard.jar MarkDuplicates INPUT=sorted-file.bam OUTPUT=removed-duplicates.bam METRICS_FILE=duplicate-metrics.txt
 	'''
 }
 
@@ -215,16 +231,17 @@ process indexBam2 {
 	
 	echo true
 
+	input:
+	file 'removed-duplicates.bam' from ch_markingduplicates
+
+	output:
+	file 'removed-duplicates.bam' into ch_indexbam2
+	file 'removed-duplicates.bami.bai' into ch_indexbai2
+
 	shell:
 	'''
-	if [ ! -f "refinement/duplicates/removed-duplicates.bam.bai" ]; then
-        	echo "indexing removed duplicates bam file"
-        	cd refinement/duplicates
-        	samtools index removed-duplicates.bam
-        	cd ../../
-	else
-        	echo "removed duplicates bam already indexed"
-	fi
+        echo "indexing removed duplicates bam file"
+        samtools index removed-duplicates.bam
 	'''
 }
 
@@ -232,16 +249,18 @@ process runQualimap {
 
 	echo true
 
+	input:
+        file 'removed-duplicates.bam' from ch_indexbam2
+        file 'removed-duplicates.bami.bai' from ch_indexbai2	
+
+	output:
+	file 'removed-duplicates.bam' into ch_runqualimap_bam
+        file 'removed-duplicates.bami.bai' into ch_runqualimap_bai
+	
 	shell:
 	'''
-	if [ ! -d "refinement/quality-map-report" ]; then
-        	echo "producing qualimap qc report"
-        	cd refinement
-        	qualimap bamqc -bam duplicates/removed-duplicates.bam -outdir quality-map-report
-        	cd ../
-	else
-        	echo "qualimap qc report already generated"
-	fi
+        echo "producing qualimap qc report"
+        qualimap bamqc -bam duplicates/removed-duplicates.bam -outdir quality-map-report
 	'''
 }
 
@@ -250,14 +269,13 @@ process indexReference2 {
 
 	echo true
 
+        when:
+        params.samtoolsindex
+
 	shell:
 	'''
-	if [ ! -f "../resources/reference/reference-genome.fasta.fai" ]; then
-        	echo "indexing reference genome"
-        	samtools faidx ../resources/reference/reference-genome.fasta
-	else
-        	echo "genome already indexed"
-	fi
+        echo "indexing reference genome"
+        samtools faidx /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
 	'''
 }
 
@@ -265,14 +283,13 @@ process createReferenceDict {
 
 	echo true
 
+        when:
+        params.picarddict
+
 	shell:
 	'''
-	if [ ! -f "../resources/reference/reference-genome.dict" ]; then
-        	echo "creating reference dictionary"
-        	java -jar bin/picard/build/libs/picard.jar CreateSequenceDictionary -R ../resources/reference/reference-genome.fasta
-	else
-        	echo "dictionary already made"
-	fi
+        echo "creating reference dictionary"
+        java -jar bin/picard/build/libs/picard.jar CreateSequenceDictionary -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
 	'''
 }
 
@@ -280,19 +297,21 @@ process recalibrateData {
 
 	echo true
 
+	input:
+	file 'removed-duplicates.bam' from ch_runqualimap_bam
+        file 'removed-duplicates.bami.bai' from ch_runqualimap_bai
+
+	output:
+	file 'removed-duplicates.bam' into ch_recalibrate_bam
+        file 'removed-duplicates.bami.bai' into ch_recalibrate_bai
+	file 'data.table' into ch_recalibrate_table
+
 	shell:
 	'''
-	if [ ! -d "calling_variants/gatk-dir/" ]; then
-        	echo "recalibrating data"
-        	mkdir -p calling_variants/gatk-dir/
-        	cd calling_variants/gatk-dir/
-        	gatk BaseRecalibrator -I ../../refinement/duplicates/removed-duplicates.bam -R ../../../resources/reference/reference-genome.fasta \
-        	--known-sites ../../../resources/resources-broad-hg38-v0-Homo_sapiens_assembly38.known_indels.vcf \
-        	--known-sites ../../../resources/resources-broad-hg38-v0-Mills_and_1000G_gold_standard.indels.hg38.vcf -O recal_data.table
-        	cd ../../
-	else
-        	echo "data already recalibrated"
-	fi
+        echo "recalibrating data"
+        gatk BaseRecalibrator -I removed-duplicates.bam -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta \
+        --known-sites /home/jovyan/coursework-pipeline/resources/resources-broad-hg38-v0-Homo_sapiens_assembly38.known_indels.vcf \
+        --known-sites /home/jovyan/coursework-pipeline/resources/resources-broad-hg38-v0-Mills_and_1000G_gold_standard.indels.hg38.vcf -O recal_data.table
 	'''
 }
 
@@ -300,16 +319,18 @@ process rescoreData {
 
 	echo true
 
+	input:
+        file 'removed-duplicates.bam' from ch_recalibrate_bam
+        file 'removed-duplicates.bami.bai' from ch_recalibrate_bai
+        file 'data.table' from ch_recalibrate_table
+
+	output:
+	file 'rescored.bam' into ch_rescored
+
 	shell:
 	'''
-	if [ ! -f "calling_variants/gatk-dir/rescored.bam" ]; then
-        	echo "apply base quality score recalibration"
-        	cd calling_variants/gatk-dir/
-        	gatk ApplyBQSR -R ../../../resources/reference/reference-genome.fasta -I ../../refinement/duplicates/removed-duplicates.bam -bqsr recal_data.table -O rescored.bam
-        	cd ../../
-	else
-        	echo "bqsr already applied"
-	fi
+        echo "apply base quality score recalibration"
+        gatk ApplyBQSR -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta -I removed-duplicates.bam -bqsr recal_data.table -O rescored.bam
 	'''
 }
 
@@ -317,16 +338,17 @@ process haplotypeCalling {
 
 	echo true
 
+	input:
+	file 'rescored.bam' from ch_rescored
+
+	output:
+	file 'rescored.bam' into ch_haplotype_bam
+	file 'gatk-file.vcf' into ch_haplotype_vcf
+	
 	shell:
 	'''
-	if [ ! -f "calling_variants/gatk-dir/gatk-file.vcf" ]; then
-        	echo "haplotype caller running"
-        	cd calling_variants/gatk-dir/
-        	gatk HaplotypeCaller -R ../../../resources/reference/reference-genome.fasta -I rescored.bam -mbq 20 --minimum-mapping-quality 50 -O gatk-file.vcf
-        	cd ../../
-	else
-        	echo "halpotype already ran"
-	fi
+        echo "haplotype caller running"
+        gatk HaplotypeCaller -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta -I rescored.bam -mbq 20 --minimum-mapping-quality 50 -O gatk-file.vcf
 	'''
 }
 
@@ -334,16 +356,17 @@ process selectingVariants {
 
 	echo true
 
+	input:
+	file 'gatk-file.vcf' from ch_haplotype_vcf
+
+	output:
+	file 'selected-gatk.vcf' into ch_selectvariants
+
 	shell:
-	if [ ! -f "calling_variants/gatk-dir/selected-gatk.vcf" ]; then
-        	echo "selecting variants"
-        	cd calling_variants/gatk-dir/
-        	gatk SelectVariants -R ../../../resources/reference/reference-genome.fasta --variant gatk-file.vcf -O initial-selected-gatk.vcf --select-type SNP
-        	grep -w '^#\|^#CHROM\|chr[1-9]\|chr[1-2][0-9]\|chr[X,Y,M]' initial-selected-gatk.vcf > selected-gatk.vcf
-        	cd ../../
-	else
-        	echo "variants already selected"
-	fi
+	'''
+        echo "selecting variants"
+        gatk SelectVariants -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta --variant gatk-file.vcf -O initial-selected-gatk.vcf --select-type SNP
+        grep -w '^#\|^#CHROM\|chr[1-9]\|chr[1-2][0-9]\|chr[X,Y,M]' initial-selected-gatk.vcf > selected-gatk.vcf
 	'''
 }
 
@@ -351,18 +374,17 @@ process runFreebayes {
 
 	echo true
 
+	input:
+	file 'rescored.bam' from ch_haplotype_bam
+
+	output:
+	file 'freebayes-file.vcf' into ch_freebayes
+
 	shell:
 	'''
-	if [ ! -f "calling_variants/freebayes-dir/freebayes-file.vcf" ]; then
-        	echo "running freebayes"
-        	mkdir -p calling_variants/freebayes-dir/
-        	cd calling_variants/freebayes-dir/
-        	freebayes -q 20 -m 50 -u -f ../../../resources/reference/reference-genome.fasta ../gatk-dir/rescored.bam > freebayes-initial-file.vcf
-        	grep -w '^#\|^#CHROM\|chr[1-9]\|chr[1-2][0-9]\|chr[X,Y,M]' freebayes-initial-file.vcf > freebayes-file.vcf
-        	cd ../../
-	else
-        	echo "freebayes already ran"
-	fi
+        echo "running freebayes"
+        freebayes -q 20 -m 50 -u -f /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta rescored.bam > freebayes-initial-file.vcf
+        grep -w '^#\|^#CHROM\|chr[1-9]\|chr[1-2][0-9]\|chr[X,Y,M]' freebayes-initial-file.vcf > freebayes-file.vcf
 	'''
 }
 
@@ -370,16 +392,17 @@ process compareCalling {
 
 	echo true
 
+	input:
+	file 'selected-gatk.vcf' from ch_selectvariants
+	file 'freebayes-file.vcf' from ch_freebayes
+
+	output:
+	file 'freebayes-file.vcf' into ch_compare	
+
 	shell:
-	if [ ! -f "calling_variants/compared/compare-vcf-files.diff.sites_in_files" ]; then
-        	echo "comparing variant calling"
-        	mkdir -p calling_variants/compared/
-        	cd calling_variants/compared/
-        	vcftools --vcf ../gatk-dir/selected-gatk.vcf --diff ../freebayes-dir/freebayes-file.vcf --diff-site --out compare-vcf-files \
-        	cd ../../
-	else
-        	echo "variant calling already compared"
-	fi
+	'''
+        echo "comparing variant calling"
+        vcftools --vcf selected-gatk.vcf --diff freebayes-file.vcf --diff-site --out compare-vcf-files \
 	'''
 }
 
@@ -387,33 +410,32 @@ process filterVariants {
 
 	echo true
 
+	input:
+	file 'freebayes-file.vcf' from ch_compare
+
+	output:
+	file 'filtered-vcf.recode.vcf' into ch_filtervariants	
+
 	shell:
 	'''
-	if [ ! -f "calling_variants/filtering/filtered-vcf.recode.vcf" ]; then
-        	echo "filter freebayes vcf file"
-        	mkdir -p calling_variants/filtering/
-        	cd calling_variants/filtering/
-        	vcftools --vcf ../freebayes-dir/freebayes-file.vcf --minDP 3 --minQ 20 --out temp --recode --recode-INFO-all
-        	vcftools --vcf temp.recode.vcf --max-missing 1 --out filtered-vcf --recode --recode-INFO-all
-        	cd ../../
-	else
-        	echo "vcf filtering already done"
-	fi
+        echo "filter freebayes vcf file"
+        vcftools --vcf freebayes-file.vcf --minDP 3 --minQ 20 --out temp --recode --recode-INFO-all
+        vcftools --vcf temp.recode.vcf --max-missing 1 --out filtered-vcf --recode --recode-INFO-all
+	'''
 }
 
 process downloadSnpeffGenome {
 
 	echo true
 
+	when:
+        params.snpeffgenome
+
 	shell:
-	if [ ! -d "../resources/snpeff-genome" ]; then
-	        echo "downloading snpeff genome"
-        	mkdir -p ../resources/snpeff-genome
-        	java -jar ~/bin/snpEff/snpEff.jar download GRCh38.99
-       		cp -r ~/bin/snpEff/data/GRCh38.99 ../resources/snpeff-genome/
-	else
-        	echo "genome already downloaded"
-	fi
+	'''
+	echo "downloading snpeff genome"
+        java -jar ~/bin/snpEff/snpEff.jar download GRCh38.99
+       	cp -r ~/bin/snpEff/data/GRCh38.99 /home/jovyan/coursework-pipeline/resources/snpeff-genome/
 	'''
 }
 
@@ -421,32 +443,30 @@ process annotateVCF {
 
 	echo true
 
+	input:
+	file 'filtered-vcf.recode.vcf' into ch_filtervariants
+
+	output:
+	file 'snpeff.vcf' into ch_annotate
+	
 	shell:
-	if [ ! -d "annotations" ]; then
-        	echo "annotating vcf file"
-        	mkdir -p annotations
-        	cd annotations
-        	java -jar ~/bin/snpEff/snpEff.jar -c ~/bin/snpEff/snpEff.config GRCh38.99 ../calling_variants/filtering/filtered-vcf.recode.vcf > snpeff.vcf
-        	cd ../
-	else
-        	echo "vcf already annotated"
-	fi
+	'''
+        echo "annotating vcf file"
+	java -jar ~/bin/snpEff/snpEff.jar -c ~/bin/snpEff/snpEff.config GRCh38.99 ../calling_variants/filtering/filtered-vcf.recode.vcf > snpeff.vcf
+	'''
 }
 
 process geneSelection {
 
 	echo true
 
+	input:
+	file 'snpeff.vcf' from ch_annotate
+	
 	shell:
 	'''
-	if [ ! -d "annotations/CYP2C19" ]; then
-	        echo "selecting CYP2C19 info"
-        	mkdir -p annotations/CYP2C19
-        	cd annotations/CYP2C19
-        	grep CYP2C19 ../snpeff.vcf > CYP2C19.vcf
-        	cd ../../
-	else
-        	echo "CYP2C19 already selected"
-	fi
+	echo "selecting CYP2C19 info"
+        grep CYP2C19 ../snpeff.vcf > CYP2C19.vcf
 	'''
 }
+*/
