@@ -5,8 +5,8 @@ if [ ! -d "qc/fastq-output" ]; then
 	echo "running fastq analysis"
 	mkdir -p qc/fastq-output/
 	fastqc fastq_data/SRR1518011_1.fastq.gz fastq_data/SRR1518011_2.fastq.gz -o qc/fastq-output/
-	unzip qc/fastq-output/SRR1518011_1_fastqc.zip -d qc/fastq-output/zip_output/
-	unzip qc/fastq-output/SRR1518011_2_fastqc.zip -d qc/fastq-output/zip_output/
+	#unzip qc/fastq-output/SRR1518011_1_fastqc.zip -d qc/fastq-output/zip_output/
+	#unzip qc/fastq-output/SRR1518011_2_fastqc.zip -d qc/fastq-output/zip_output/
 else
 	echo "fastq analysis already run"
 fi
