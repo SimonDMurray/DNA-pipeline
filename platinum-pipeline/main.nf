@@ -104,7 +104,6 @@ process indexReference1 {
 
 	shell:
 	'''
-	PATH="/opt/conda/bin:/opt/conda/condabin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/rstudio-server/bin"
 	echo "indexing reference genome"
         bwa index /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
 	'''
@@ -124,16 +123,14 @@ process alignSequence {
 
 	shell:
 	'''
-	PATH="/opt/conda/bin:/opt/conda/condabin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/rstudio-server/bin"
         echo "aligning sequence"
-        bwa mem -t 8 -R '@RG\tID:identifier\tLB:library\tPL:platform\tPU:platform-unit\tSM:sample-name' \
+        bwa mem -t 8 -R "@RG\\tID:identifier\\tLB:library\\tPL:platform\\tPU:platform-unit\\tSM:sample-name" \
         /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta \
        	SRR1518011_1.fastq.gz \
         SRR1518011_2.fastq.gz > initial-output.sam
 	'''
 }
 
-/*
 process convertSam {
 
 	echo true
@@ -183,7 +180,6 @@ process indexBam1 {
 	'''
         echo "indexing bam"
         samtools index sorted-file.bam
-	fi
 	'''
 }
 
@@ -206,6 +202,7 @@ process runFlagstat {
 	'''
 }
 
+/*
 process markingDuplicates {
 
 	echo true
