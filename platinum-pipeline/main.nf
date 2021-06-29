@@ -40,8 +40,8 @@ process runFastqc {
 	file 'SRR1518011_2.fastq.gz' from ch_getfastq_2
 		
 	output:
-	file 'SRR1518011_1.fastq.gz' into ch_runfastqc_1
-        file 'SRR1518011_2.fastq.gz' into ch_runfastqc_2
+	file 'SRR1518011_1.fastq.gz' into ch_dummy1
+        file 'SRR1518011_2.fastq.gz' into ch_dummy2
 
 	shell:
 	'''
@@ -49,6 +49,9 @@ process runFastqc {
         fastqc SRR1518011_1.fastq.gz SRR1518011_2.fastq.gz
 	'''
 }
+
+ch_dummy1.view().into { ch_into_trim1; ch_switch1 }
+ch_dummy2.view().into { ch_into_trim2; ch_switch2 }
 
 
 process removePrimersAdapters {
@@ -59,8 +62,8 @@ process removePrimersAdapters {
     	params.trim
 
 	input:
-        file 'SRR1518011_1.fastq.gz' from ch_runfastqc_1
-        file 'SRR1518011_2.fastq.gz' from ch_runfastqc_2
+        file 'SRR1518011_1.fastq.gz' from ch_into_trim1
+        file 'SRR1518011_2.fastq.gz' from ch_into_trim2
 
         output:
         file 'qc/trim/paired/SRR1518011_1.fastq.gz' into ch_removepa_1
@@ -109,6 +112,9 @@ process trimLowQuality {
 	'''
 }
 
+ch_switch1.until{params.trim}.mix(ch_trimlq1).set{ch_into_alignment1}
+ch_switch2.until{params.trim}.mix(ch_trimlq2).set{ch_into_alignment2}
+
 process indexReference1 {
 	
 	echo
@@ -128,8 +134,8 @@ process alignSequence {
 	echo true
 	
 	input:
-        file 'SRR1518011_1.fastq.gz' from ${channel_name1}
-        file 'SRR1518011_2.fastq.gz' from ${channel_name2}
+        file 'SRR1518011_1.fastq.gz' from ch_into_alignment1
+        file 'SRR1518011_2.fastq.gz' from ch_into_alignment2
 	
 	output:
 	file 'initial-output.sam' into ch_alignsequence	
