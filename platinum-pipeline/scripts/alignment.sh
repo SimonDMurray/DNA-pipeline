@@ -3,7 +3,7 @@ set -euo pipefail
 
 if [ ! -f "../resources/reference/reference-genome.fasta.bwt" ]; then
 	echo "indexing reference genome"
-	bwa index /home/jovyan/resources/reference/reference-genome.fasta
+	bwa index /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
 else
 	echo "genome already indexed"
 fi
