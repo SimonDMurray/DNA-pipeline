@@ -1,5 +1,12 @@
 #!/home/jovyan/bin/ nextflow
 
+params.trimpa = false
+params.trimlq = false
+params.bwaindex = false
+params.samtoolsindex = false
+params.picarddict = false
+params.snpeffgenome = false
+
 process getFastq {
 	
 	echo true
@@ -36,7 +43,7 @@ process runFastqc {
 	'''
 }
 
-/*
+
 process removePrimersAdapters {
 	
 	echo true
@@ -49,8 +56,8 @@ process removePrimersAdapters {
         file 'SRR1518011_2.fastq.gz' from ch_getfastq_2
 
         output:
-        file 'qc/trim/paired/SRR1518011_1_paired.fastq.gz' into ch_removepa_1
-        file 'qc/trim/paired/SRR1518011_2_paired.fastq.gz' into ch_removepa_2
+        file 'qc/trim/paired/SRR1518011_1.fastq.gz' into ch_removepa_1
+        file 'qc/trim/paired/SRR1518011_2.fastq.gz' into ch_removepa_2
 	
 	shell:
 	'''
@@ -60,8 +67,8 @@ process removePrimersAdapters {
        	mkdir -p qc/trim/unpaired
        	TrimmomaticPE -threads 1 -phred33 -trimlog qc/trim/logs/trimm_logfile \
        	SRR1518011_1.fastq.gz SRR1518011_2.fastq.gz \
-       	qc/trim/paired/SRR1518011_1_paired.fastq.gz qc/trim/unpaired/SRR1518011_2_unpaired.fastq.gz \
-       	qc/trim/paired/SRR1518011_2_paired.fastq.gz qc/trim/unpaired/SRR1518011_2_unpaired.fastq.gz \
+       	qc/trim/paired/SRR1518011_1.fastq.gz qc/trim/unpaired/SRR1518011_2.fastq.gz \
+       	qc/trim/paired/SRR1518011_2.fastq.gz qc/trim/unpaired/SRR1518011_2.fastq.gz \
        	ILLUMINACLIP:/home/jovyan/coursework-pipeline/resources/primers_adapters.fa:2:30:10 MINLEN:36
 	'''
 }
@@ -74,27 +81,43 @@ process trimLowQuality {
         params.trimlq
 
 	input:
-	file 'SRR1518011_1_paired.fastq.gz' from ch_removepa_1
-        file 'SRR1518011_2_paired.fastq.gz' from ch_removepa_2
-
-	output:
-	file 'qc/trim2/paired/SRR1518011_1_PE_trimmed_adapter_removed.fastq.gz' into ch_trimlq1
-	file 'qc/trim2/paired/SRR1518011_2_PE_trimmed_adapter_removed.fastq.gz' into ch_trimlq2
-	
+	if ( params.trimpa ) {
+		file 'SRR1518011_1.fastq.gz' from ch_removepa_1
+        	file 'SRR1518011_2.fastq.gz' from ch_removepa_2
+	}
+	else {
+		file 'SRR1518011_1.fastq.gz' from ch_runfastqc_1
+        	file 'SRR1518011_2.fastq.gz' from ch_runfastqc_2
+	}
+	//output:
+	//file 'qc/trim2/paired/SRR1518011_1_PE_trimmed_adapter_removed.fastq.gz' into ch_trimlq1
+	//file 'qc/trim2/paired/SRR1518011_2_PE_trimmed_adapter_removed.fastq.gz' into ch_trimlq2
+        
+	shell:
+        '''
+        if [ params.trimpa ]; then
+                echo "trimpa"
+        else
+        	echo "not trimpa"
+	fi
+	'''
+/*	
 	shell:
 	'''
-       	echo "trimming low quality reads"
+	echo "trimming low quality reads"
        	mkdir -p qc/trim2/logs
        	mkdir -p qc/trim2/paired
        	mkdir -p qc/trim2/unpaired
        	TrimmomaticPE -threads 1 -phred33 -trimlog qc/trim2/logs/trimm_logfile \
-       	SRR1518011_1_paired.fastq.gz SRR1518011_2_paired.fastq.gz \
+       	SRR1518011_1.fastq.gz SRR1518011_2.fastq.gz \
        	qc/trim2/paired/SRR1518011_1_PE_trimmed_adapter_removed.fastq.gz qc/trim2/unpaired/SRR1518011_1_UP_trimmed_adapter_removed.fastq.gz \
        	qc/trim2/paired/SRR1518011_2_PE_trimmed_adapter_removed.fastq.gz qc/trim2/unpaired/SRR1518011_2_UP_trimmed_adapter_removed.fastq.gz \
        	LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
 	'''
+*/
 }
 
+/*
 process indexReference1 {
 	
 	echo
@@ -108,7 +131,6 @@ process indexReference1 {
         bwa index /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
 	'''
 }
-*/
 
 process alignSequence {
 
@@ -257,7 +279,6 @@ process runQualimap {
 	'''
 }
 
-/*
 process indexReference2 {
 
 	echo true
@@ -285,7 +306,6 @@ process createReferenceDict {
         java -jar ~/bin/picard/build/libs/picard.jar CreateSequenceDictionary -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
 	'''
 }
-*/
 
 process recalibrateData {
 
@@ -418,7 +438,6 @@ process filterVariants {
 	'''
 }
 
-/*
 process downloadSnpeffGenome {
 
 	echo true
@@ -433,7 +452,6 @@ process downloadSnpeffGenome {
        	cp -r ~/bin/snpEff/data/GRCh38.99 /home/jovyan/coursework-pipeline/resources/snpeff-genome/
 	'''
 }
-*/
 
 process annotateVCF {
 
@@ -465,3 +483,4 @@ process geneSelection {
         grep CYP2C19 snpeff.vcf > CYP2C19.vcf
 	'''
 }
+*/
