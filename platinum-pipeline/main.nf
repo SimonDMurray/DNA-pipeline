@@ -202,14 +202,13 @@ process runFlagstat {
 	'''
 }
 
-/*
 process markingDuplicates {
 
 	echo true
 
 	input:
 	file 'sorted-file.bam' from ch_runflagstat_bam
-	file 'sorted-file.bam.bai' from ch_indexbai_bai	
+	file 'sorted-file.bam.bai' from ch_runflagstat_bai	
 
 	output:
 	file 'removed-duplicates.bam' into ch_markingduplicates
@@ -230,7 +229,7 @@ process indexBam2 {
 
 	output:
 	file 'removed-duplicates.bam' into ch_indexbam2
-	file 'removed-duplicates.bami.bai' into ch_indexbai2
+	file 'removed-duplicates.bam.bai' into ch_indexbai2
 
 	shell:
 	'''
@@ -245,20 +244,20 @@ process runQualimap {
 
 	input:
         file 'removed-duplicates.bam' from ch_indexbam2
-        file 'removed-duplicates.bami.bai' from ch_indexbai2	
+        file 'removed-duplicates.bam.bai' from ch_indexbai2	
 
 	output:
 	file 'removed-duplicates.bam' into ch_runqualimap_bam
-        file 'removed-duplicates.bami.bai' into ch_runqualimap_bai
+        file 'removed-duplicates.bam.bai' into ch_runqualimap_bai
 	
 	shell:
 	'''
         echo "producing qualimap qc report"
-        qualimap bamqc -bam duplicates/removed-duplicates.bam -outdir quality-map-report
+        qualimap bamqc -bam removed-duplicates.bam -outdir quality-map-report
 	'''
 }
 
-
+/*
 process indexReference2 {
 
 	echo true
@@ -283,9 +282,10 @@ process createReferenceDict {
 	shell:
 	'''
         echo "creating reference dictionary"
-        java -jar bin/picard/build/libs/picard.jar CreateSequenceDictionary -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
+        java -jar ~/bin/picard/build/libs/picard.jar CreateSequenceDictionary -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
 	'''
 }
+*/
 
 process recalibrateData {
 
@@ -293,12 +293,12 @@ process recalibrateData {
 
 	input:
 	file 'removed-duplicates.bam' from ch_runqualimap_bam
-        file 'removed-duplicates.bami.bai' from ch_runqualimap_bai
+        file 'removed-duplicates.bam.bai' from ch_runqualimap_bai
 
 	output:
 	file 'removed-duplicates.bam' into ch_recalibrate_bam
-        file 'removed-duplicates.bami.bai' into ch_recalibrate_bai
-	file 'data.table' into ch_recalibrate_table
+        file 'removed-duplicates.bam.bai' into ch_recalibrate_bai
+	file 'recal_data.table' into ch_recalibrate_table
 
 	shell:
 	'''
@@ -315,8 +315,8 @@ process rescoreData {
 
 	input:
         file 'removed-duplicates.bam' from ch_recalibrate_bam
-        file 'removed-duplicates.bami.bai' from ch_recalibrate_bai
-        file 'data.table' from ch_recalibrate_table
+        file 'removed-duplicates.bam.bai' from ch_recalibrate_bai
+        file 'recal_data.table' from ch_recalibrate_table
 
 	output:
 	file 'rescored.bam' into ch_rescored
@@ -347,20 +347,20 @@ process haplotypeCalling {
 }
 
 process selectingVariants {
-
+	
 	echo true
 
 	input:
 	file 'gatk-file.vcf' from ch_haplotype_vcf
 
-	output:
-	file 'selected-gatk.vcf' into ch_selectvariants
-
+        output:
+        file 'selected-gatk.vcf' into ch_selectvariants
+	
 	shell:
 	'''
-        echo "selecting variants"
-        gatk SelectVariants -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta --variant gatk-file.vcf -O initial-selected-gatk.vcf --select-type SNP
-        grep -w '^#\|^#CHROM\|chr[1-9]\|chr[1-2][0-9]\|chr[X,Y,M]' initial-selected-gatk.vcf > selected-gatk.vcf
+	echo "selecting variants"
+	gatk SelectVariants -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta --variant gatk-file.vcf -O initial-selected-gatk.vcf --select-type SNP
+	/home/jovyan/coursework-pipeline/platinum-pipeline/scripts/selection.sh
 	'''
 }
 
@@ -378,7 +378,7 @@ process runFreebayes {
 	'''
         echo "running freebayes"
         freebayes -q 20 -m 50 -u -f /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta rescored.bam > freebayes-initial-file.vcf
-        grep -w '^#\|^#CHROM\|chr[1-9]\|chr[1-2][0-9]\|chr[X,Y,M]' freebayes-initial-file.vcf > freebayes-file.vcf
+	/home/jovyan/coursework-pipeline/platinum-pipeline/scripts/freebayes.sh
 	'''
 }
 
@@ -418,6 +418,7 @@ process filterVariants {
 	'''
 }
 
+/*
 process downloadSnpeffGenome {
 
 	echo true
@@ -432,13 +433,14 @@ process downloadSnpeffGenome {
        	cp -r ~/bin/snpEff/data/GRCh38.99 /home/jovyan/coursework-pipeline/resources/snpeff-genome/
 	'''
 }
+*/
 
 process annotateVCF {
 
 	echo true
 
 	input:
-	file 'filtered-vcf.recode.vcf' into ch_filtervariants
+	file 'filtered-vcf.recode.vcf' from ch_filtervariants
 
 	output:
 	file 'snpeff.vcf' into ch_annotate
@@ -446,7 +448,7 @@ process annotateVCF {
 	shell:
 	'''
         echo "annotating vcf file"
-	java -jar ~/bin/snpEff/snpEff.jar -c ~/bin/snpEff/snpEff.config GRCh38.99 ../calling_variants/filtering/filtered-vcf.recode.vcf > snpeff.vcf
+	java -jar ~/bin/snpEff/snpEff.jar -c ~/bin/snpEff/snpEff.config GRCh38.99 filtered-vcf.recode.vcf > snpeff.vcf
 	'''
 }
 
@@ -460,7 +462,6 @@ process geneSelection {
 	shell:
 	'''
 	echo "selecting CYP2C19 info"
-        grep CYP2C19 ../snpeff.vcf > CYP2C19.vcf
+        grep CYP2C19 snpeff.vcf > CYP2C19.vcf
 	'''
 }
-*/
