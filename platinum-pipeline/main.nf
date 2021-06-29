@@ -78,30 +78,16 @@ process trimLowQuality {
 	echo true
 
 	when:
-        params.trimlq
+        params.trimlp
 
 	input:
-	if ( params.trimpa ) {
-		file 'SRR1518011_1.fastq.gz' from ch_removepa_1
-        	file 'SRR1518011_2.fastq.gz' from ch_removepa_2
-	}
-	else {
-		file 'SRR1518011_1.fastq.gz' from ch_runfastqc_1
-        	file 'SRR1518011_2.fastq.gz' from ch_runfastqc_2
-	}
-	//output:
-	//file 'qc/trim2/paired/SRR1518011_1_PE_trimmed_adapter_removed.fastq.gz' into ch_trimlq1
-	//file 'qc/trim2/paired/SRR1518011_2_PE_trimmed_adapter_removed.fastq.gz' into ch_trimlq2
+	file 'SRR1518011_1.fastq.gz' from ch_removepa_1
+        file 'SRR1518011_2.fastq.gz' from ch_removepa_2
+	
+	output:
+	file 'qc/trim2/paired/SRR1518011_1.fastq.gz' into ch_trimlq1
+	file 'qc/trim2/paired/SRR1518011_2.fastq.gz' into ch_trimlq2
         
-	shell:
-        '''
-        if [ params.trimpa ]; then
-                echo "trimpa"
-        else
-        	echo "not trimpa"
-	fi
-	'''
-/*	
 	shell:
 	'''
 	echo "trimming low quality reads"
@@ -110,14 +96,12 @@ process trimLowQuality {
        	mkdir -p qc/trim2/unpaired
        	TrimmomaticPE -threads 1 -phred33 -trimlog qc/trim2/logs/trimm_logfile \
        	SRR1518011_1.fastq.gz SRR1518011_2.fastq.gz \
-       	qc/trim2/paired/SRR1518011_1_PE_trimmed_adapter_removed.fastq.gz qc/trim2/unpaired/SRR1518011_1_UP_trimmed_adapter_removed.fastq.gz \
-       	qc/trim2/paired/SRR1518011_2_PE_trimmed_adapter_removed.fastq.gz qc/trim2/unpaired/SRR1518011_2_UP_trimmed_adapter_removed.fastq.gz \
+       	qc/trim2/paired/SRR1518011_1.fastq.gz qc/trim2/unpaired/SRR1518011_1.fastq.gz \
+       	qc/trim2/paired/SRR1518011_2.fastq.gz qc/trim2/unpaired/SRR1518011_2.fastq.gz \
        	LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
 	'''
-*/
 }
 
-/*
 process indexReference1 {
 	
 	echo
@@ -133,6 +117,9 @@ process indexReference1 {
 }
 
 process alignSequence {
+
+	when:
+	params.normal
 
 	echo true
 	
@@ -483,4 +470,3 @@ process geneSelection {
         grep CYP2C19 snpeff.vcf > CYP2C19.vcf
 	'''
 }
-*/
