@@ -9,3 +9,4 @@ reference genome has extra genomic information for known chromosome regions that
 conda install of fastqc makes conda deal with java issues rather than having to specify 2 paths for locations which is cleaner
 in bash script used relative paths so someone could implement pipeline from a clone (assuming all installs were correct) without having to change paths (although PATH variable would need to be updated)
 commandline results and galaxy results share 3 genomice loci, command line has 4 total genomic loci, galaxy has 5 total genomic loci. Command line includes some extra known indel removals so this could be reason
+need to change channel input for the alignment if trim option selected

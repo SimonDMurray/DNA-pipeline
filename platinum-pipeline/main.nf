@@ -1,11 +1,18 @@
 #!/home/jovyan/bin/ nextflow
 
-params.trimpa = false
-params.trimlq = false
+params.trim = false
 params.bwaindex = false
 params.samtoolsindex = false
 params.picarddict = false
 params.snpeffgenome = false
+
+channel_name1 = "ch_runfastqc_1"
+channel_name2 = "ch_runfastqc_2"
+
+if (params.trim) {
+	channel_name1 = "ch_trimlq1"
+	channel_name2 = "ch_trimlq2"
+}
 
 process getFastq {
 	
@@ -49,11 +56,11 @@ process removePrimersAdapters {
 	echo true
 
 	when:
-    	params.trimpa
+    	params.trim
 
 	input:
-        file 'SRR1518011_1.fastq.gz' from ch_getfastq_1
-        file 'SRR1518011_2.fastq.gz' from ch_getfastq_2
+        file 'SRR1518011_1.fastq.gz' from ch_runfastqc_1
+        file 'SRR1518011_2.fastq.gz' from ch_runfastqc_2
 
         output:
         file 'qc/trim/paired/SRR1518011_1.fastq.gz' into ch_removepa_1
@@ -78,7 +85,7 @@ process trimLowQuality {
 	echo true
 
 	when:
-        params.trimlp
+        params.trim
 
 	input:
 	file 'SRR1518011_1.fastq.gz' from ch_removepa_1
@@ -118,15 +125,12 @@ process indexReference1 {
 
 process alignSequence {
 
-	when:
-	params.normal
-
 	echo true
 	
 	input:
-        file 'SRR1518011_1.fastq.gz' from ch_runfastqc_1
-        file 'SRR1518011_2.fastq.gz' from ch_runfastqc_2
-
+        file 'SRR1518011_1.fastq.gz' from ${channel_name1}
+        file 'SRR1518011_2.fastq.gz' from ${channel_name2}
+	
 	output:
 	file 'initial-output.sam' into ch_alignsequence	
 
