@@ -70,10 +70,7 @@ if [ ! -f "calling_variants/compared/compare-vcf-files.diff.sites_in_files" ]; t
 	echo "comparing variant calling"
 	mkdir -p calling_variants/compared/
 	cd calling_variants/compared/
-	vcftools --vcf ../gatk-dir/selected-gatk.vcf --diff ../freebayes-dir/freebayes-file.vcf --diff-site --out compare-vcf-files \
-	--not-chr "chr14_GL000225v1_random" --not-chr "chr9_KI270719v1_random" \
-	--not-chr "chr22_KI270734v1_random" --not-chr "chr22_KI270732v1_random" \
-	--not-chr "chr22_KI270734v1_random" --not-chr "chrUn_JTFH01000068v1_decoy"
+	vcftools --vcf ../gatk-dir/selected-gatk.vcf --diff ../freebayes-dir/freebayes-file.vcf --diff-site --out compare-vcf-files 
 	cd ../../
 else
 	echo "variant calling already compared"
@@ -83,7 +80,7 @@ if [ ! -f "calling_variants/filtering/filtered-vcf.recode.vcf" ]; then
         echo "filter freebayes vcf file"
         mkdir -p calling_variants/filtering/
         cd calling_variants/filtering/
-        vcftools --vcf ../freebayes-dir/freebayes-file.vcf --minDP 3 --minQ 20 --out temp --recode --recode-INFO-all
+        vcftools --vcf ../gatk-dir/selected-gatk.vcf --minDP 3 --minQ 20 --out temp --recode --recode-INFO-all
         vcftools --vcf temp.recode.vcf --max-missing 1 --out filtered-vcf --recode --recode-INFO-all
         cd ../../
 else

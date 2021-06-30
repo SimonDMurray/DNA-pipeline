@@ -9,6 +9,7 @@ conda install -c bioconda -y freebayes
 conda install -c bioconda -y qualimap
 conda install -c bioconda -y gatk4
 
+curl -s https://get.nextflow.io | bash
 
 git clone https://github.com/broadinstitute/picard.git
 cd picard/
