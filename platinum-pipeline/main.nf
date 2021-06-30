@@ -360,8 +360,7 @@ process haplotypeCalling {
 	shell:
 	'''
         echo "haplotype caller running"
-        gatk HaplotypeCaller -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta -I rescored.bam -mbq 20 \
-	--minimum-mapping-quality 50 -O gatk-file.vcf
+        gatk HaplotypeCaller -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta -I rescored.bam -mbq 20 --minimum-mapping-quality 50 -O gatk-file.vcf
 	'''
 }
 
@@ -378,8 +377,7 @@ process selectingVariants {
 	shell:
 	'''
 	echo "selecting variants"
-	gatk SelectVariants -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta --variant gatk-file.vcf \
-	-O initial-selected-gatk.vcf --select-type SNP
+	gatk SelectVariants -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta --variant gatk-file.vcf -O initial-selected-gatk.vcf --select-type SNP
 	/home/jovyan/coursework-pipeline/platinum-pipeline/scripts/selection.sh
 	'''
 }
@@ -416,7 +414,7 @@ process compareCalling {
 	shell:
 	'''
         echo "comparing variant calling"
-        vcftools --vcf selected-gatk.vcf --diff freebayes-file.vcf --diff-site --out compare-vcf-files \
+        vcftools --vcf selected-gatk.vcf --diff freebayes-file.vcf --diff-site --out compare-vcf-files 
 	'''
 }
 
@@ -483,3 +481,6 @@ process geneSelection {
         grep CYP2C19 snpeff.vcf > CYP2C19.vcf
 	'''
 }
+
+
+
