@@ -6,14 +6,6 @@ params.samtoolsindex = false
 params.picarddict = false
 params.snpeffgenome = false
 
-channel_name1 = "ch_runfastqc_1"
-channel_name2 = "ch_runfastqc_2"
-
-if (params.trim) {
-	channel_name1 = "ch_trimlq1"
-	channel_name2 = "ch_trimlq2"
-}
-
 process getFastq {
 	
 	echo true
