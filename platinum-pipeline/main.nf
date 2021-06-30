@@ -300,8 +300,7 @@ process createReferenceDict {
 	shell:
 	'''
         echo "creating reference dictionary"
-        java -jar ~/bin/picard/build/libs/picard.jar CreateSequenceDictionary \
-	-R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
+        java -jar ~/bin/picard/build/libs/picard.jar CreateSequenceDictionary -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
 	'''
 }
 
@@ -323,8 +322,7 @@ process recalibrateData {
         echo "recalibrating data"
         gatk BaseRecalibrator -I removed-duplicates.bam -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta \
         --known-sites /home/jovyan/coursework-pipeline/resources/resources-broad-hg38-v0-Homo_sapiens_assembly38.known_indels.vcf \
-        --known-sites /home/jovyan/coursework-pipeline/resources/resources-broad-hg38-v0-Mills_and_1000G_gold_standard.indels.hg38.vcf \
-	-O recal_data.table
+        --known-sites /home/jovyan/coursework-pipeline/resources/resources-broad-hg38-v0-Mills_and_1000G_gold_standard.indels.hg38.vcf -O recal_data.table
 	'''
 }
 
@@ -343,7 +341,8 @@ process rescoreData {
 	shell:
 	'''
         echo "apply base quality score recalibration"
-        gatk ApplyBQSR -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta -I removed-duplicates.bam -bqsr recal_data.table -O rescored.bam
+        gatk ApplyBQSR -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta -I removed-duplicates.bam \
+	-bqsr recal_data.table -O rescored.bam
 	'''
 }
 
@@ -361,7 +360,8 @@ process haplotypeCalling {
 	shell:
 	'''
         echo "haplotype caller running"
-        gatk HaplotypeCaller -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta -I rescored.bam -mbq 20 --minimum-mapping-quality 50 -O gatk-file.vcf
+        gatk HaplotypeCaller -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta -I rescored.bam -mbq 20 \
+	--minimum-mapping-quality 50 -O gatk-file.vcf
 	'''
 }
 
@@ -378,7 +378,8 @@ process selectingVariants {
 	shell:
 	'''
 	echo "selecting variants"
-	gatk SelectVariants -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta --variant gatk-file.vcf -O initial-selected-gatk.vcf --select-type SNP
+	gatk SelectVariants -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta --variant gatk-file.vcf \
+	-O initial-selected-gatk.vcf --select-type SNP
 	/home/jovyan/coursework-pipeline/platinum-pipeline/scripts/selection.sh
 	'''
 }
