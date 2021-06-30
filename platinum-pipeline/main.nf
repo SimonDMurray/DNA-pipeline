@@ -377,8 +377,7 @@ process selectingVariants {
 	shell:
 	'''
 	echo "selecting variants"
-	gatk SelectVariants -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta --variant gatk-file.vcf \
-	-O initial-selected-gatk.vcf --select-type SNP
+	gatk SelectVariants -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta --variant gatk-file.vcf -O initial-selected-gatk.vcf --select-type SNP
 	/home/jovyan/coursework-pipeline/platinum-pipeline/scripts/selection.sh
 	'''
 }
