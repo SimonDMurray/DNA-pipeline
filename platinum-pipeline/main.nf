@@ -429,7 +429,7 @@ process filterVariants {
 
 	shell:
 	'''
-        echo "filter freebayes vcf file"
+        echo "filter chosen vcf file"
         vcftools --vcf freebayes-file.vcf --minDP 3 --minQ 20 --out temp --recode --recode-INFO-all
         vcftools --vcf temp.recode.vcf --max-missing 1 --out filtered-vcf --recode --recode-INFO-all
 	'''
