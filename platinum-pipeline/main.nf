@@ -300,7 +300,8 @@ process createReferenceDict {
 	shell:
 	'''
         echo "creating reference dictionary"
-        java -jar ~/bin/picard/build/libs/picard.jar CreateSequenceDictionary -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
+        java -jar ~/bin/picard/build/libs/picard.jar CreateSequenceDictionary \
+	-R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta
 	'''
 }
 
@@ -322,7 +323,8 @@ process recalibrateData {
         echo "recalibrating data"
         gatk BaseRecalibrator -I removed-duplicates.bam -R /home/jovyan/coursework-pipeline/resources/reference/reference-genome.fasta \
         --known-sites /home/jovyan/coursework-pipeline/resources/resources-broad-hg38-v0-Homo_sapiens_assembly38.known_indels.vcf \
-        --known-sites /home/jovyan/coursework-pipeline/resources/resources-broad-hg38-v0-Mills_and_1000G_gold_standard.indels.hg38.vcf -O recal_data.table
+        --known-sites /home/jovyan/coursework-pipeline/resources/resources-broad-hg38-v0-Mills_and_1000G_gold_standard.indels.hg38.vcf \
+	-O recal_data.table
 	'''
 }
 
