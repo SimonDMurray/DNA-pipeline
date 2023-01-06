@@ -1,12 +1,13 @@
 #!/usr/bin/env nextflow
 
 /*
-Since this DNA pipeline was written there have been a few changes to syntax, especially for DSL2.
+Since this DNA pipeline was written there have been a few changes to syntax.
 Below are the noted changes:
-  `echo true` is now `debug true` for both DSL1 and DSL2
-  `into` as an operator is defunct in DSL to so the below code shows how to use a parameter switch in DSL 2
-There are 2 different examples of the same process below, the first uses the `multiMap` operator while the second uses DSL2's implicit channel forking
+  `echo true` is now `debug true`
+There are various ways to complete the same switch mechanism in `main.nf`, here are two examples of other ways you could do it.
+There are 2 different examples of the same process below, the first uses the `multiMap` operator while the second uses implicit channel forking
 Both do the same thing
+Please note the below examples are still written using DSL1, to use DSL2 you need to utilise workflows which have a completely different structure.
 */
 
 params.switch = false
