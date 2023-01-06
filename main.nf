@@ -126,9 +126,11 @@ ch_switch2.until{params.trim}.mix(ch_trimlq2).set{ch_into_alignment2}
 /*
 This means the when the params.trim is true, use the output from ch_trimlq as input for ch_into_alignment
 but when params.trim is false use the output from ch_switch as the input for ch_into_alignment
+
+This is utilising a ternary operator
 */
-ch_into_alignment1 = params.trim  ==true? ch_trimlq1   : ch_switch1
-ch_into_alignment2 = params.trim  ==true? ch_trimlq2   : ch_switch2
+ch_into_alignment1 = params.trim ? ch_trimlq1 : ch_switch1
+ch_into_alignment2 = params.trim ? ch_trimlq2 : ch_switch2
 
 process indexReference1 {
 	
