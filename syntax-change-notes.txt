@@ -5,7 +5,11 @@ Since this DNA pipeline was written there have been a few changes to syntax, esp
 Below are the noted changes:
   `echo true` is now `debug true` for both DSL1 and DSL2
   `into` as an operator is defunct in DSL to so the below code shows how to use a parameter switch in DSL 2
+There are 2 different examples of the same process below, the first uses the `multiMap` operator while the second uses DSL2's implicit channel forking
+Both do the same thing
 */
+
+//USING MULTIMAP
 
 params.switch = false
 
@@ -44,6 +48,56 @@ process B {
 }
 
 ch_switch.foo.until{params.switch}.mix(ch_B).set{ch_cho}
+
+process C {
+
+  debug true
+
+  input:
+  val(foo) from ch_cho
+
+  shell:
+  '''
+  echo !{foo}'cho'
+  '''
+}
+
+//USING IMPLICIT FORKING
+params.switch = false
+
+process A {
+
+  debug true
+
+  output:
+  env(foo) into ch_foo
+
+  shell:
+  '''
+  foo='foo'
+  echo $foo
+  '''
+}
+process B {
+  
+  debug true
+  
+  when:
+  params.switch
+
+  input:
+  val(foo) from ch_foo
+
+  output:
+  val(foo) into ch_bar
+
+  shell:
+  '''
+  echo !{foo}'bar'
+  '''
+}
+
+ch_foo.until{params.switch}.mix(ch_bar).set{ch_cho}
 
 process C {
 
