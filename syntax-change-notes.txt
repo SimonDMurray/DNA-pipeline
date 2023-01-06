@@ -4,22 +4,17 @@
 Since this DNA pipeline was written there have been a few changes to syntax.
 Below are the noted changes:
   `echo true` is now `debug true`
-There are various ways to complete the same switch mechanism in `main.nf`, here are two examples of other ways you could do it.
-There are 2 different examples of the same process below, the first uses the `multiMap` operator while the second uses implicit channel forking
-Both do the same thing
-Please note the below examples are still written using DSL1, to use DSL2 you need to utilise workflows which have a completely different structure.
+Below is a toy example of how to skip a process depending on whether a parameter is set or not
 */
 
-params.switch = false
-
-//USING MULTIMAP
+params.includeB = false
 
 process A {
 
   debug true
 
   output:
-  env(foo) into ch_foo
+  env(foo) into ch_multimap
 
   shell:
   '''
@@ -28,20 +23,21 @@ process A {
   '''
 }
 
-ch_foo.multiMap { it -> foo: bar: it }.set { ch_switch }
+//This means take the output from channel `ch_multimap` and send it to 2 subchannels of the channel `ch_A` (known as `ch_A.B` and `ch_A.C`)
+ch_multimap.multiMap { it -> B: C: it }.set { ch_A }
 
 process B {
   
   debug true
   
   when:
-  params.switch
+  params.includeB
 
   input:
-  val(foo) from ch_switch.bar
+  val(foo) from ch_A.B
 
   output:
-  env(bar) into ch_B
+  env(bar) into ch_BC
 
   shell:
   '''
@@ -50,65 +46,19 @@ process B {
   '''
 }
 
-ch_switch.foo.until{params.switch}.mix(ch_B).set{ch_cho}
+/*
+This means the when the parameter `includeB` is true, use the output from channel `ch_BC` as input for channel `ch_C` but when the parameter
+`includeB` is set to false use the output from channel `ch_A.B` as the input for channel `ch_C`
+*/
+ch_C = params.includeB   == true? ch_BC    : ch_A.B
 
 process C {
 
   debug true
 
   input:
-  val(either) from ch_cho
+  val(either) from ch_C
 
-  shell:
-  '''
-  echo !{either}'cho'
-  '''
-}
-
-//USING IMPLICIT FORKING
-
-process A {
-
-  debug true
-
-  output:
-  env(foo) into ch_foo
-
-  shell:
-  '''
-  foo='foo'
-  echo $foo
-  '''
-}
-
-process B {
-  
-  debug true
-  
-  when:
-  params.switch
-
-  input:
-  val(foo) from ch_foo
-
-  output:
-  env(bar) into ch_bar
-
-  shell:
-  '''
-  bar=!{foo}'bar'
-  echo !{foo}'bar'
-  '''
-}
-
-ch_foo.until{params.switch}.mix(ch_bar).set{ch_cho}
-
-process C {
-
-  debug true
-
-  input:
-  val(either) from ch_cho
 
   shell:
   '''
