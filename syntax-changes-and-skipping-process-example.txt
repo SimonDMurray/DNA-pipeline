@@ -49,8 +49,10 @@ process B {
 /*
 This means the when the parameter `includeB` is true, use the output from channel `ch_BC` as input for channel `ch_C` but when the parameter
 `includeB` is set to false use the output from channel `ch_A.B` as the input for channel `ch_C`
+
+This utilises a ternary operatory
 */
-ch_C = params.includeB   == true? ch_BC    : ch_A.B
+ch_C = params.includeB ? ch_BC : ch_A.B
 
 process C {
 
