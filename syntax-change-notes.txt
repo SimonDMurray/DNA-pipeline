@@ -1,0 +1,59 @@
+#!/usr/bin/env nextflow
+
+/*
+Since this DNA pipeline was written there have been a few changes to syntax, especially for DSL2.
+Below are the noted changes:
+  `echo true` is now `debug true` for both DSL1 and DSL2
+  `into` as an operator is defunct in DSL to so the below code shows how to use a parameter switch in DSL 2
+*/
+
+params.switch = false
+
+process A {
+
+  debug true
+
+  output:
+  env(foo) into ch_foo
+
+  shell:
+  '''
+  foo='foo'
+  echo $foo
+  '''
+}
+ch_foo.multiMap { it -> foo: bar: it }.set { ch_switch }
+
+process B {
+  
+  debug true
+  
+  when:
+  params.switch
+
+  input:
+  val(foo) from ch_switch.bar
+
+  output:
+  val(foo) into ch_B
+
+  shell:
+  '''
+  echo !{foo}'bar'
+  '''
+}
+
+ch_switch.foo.until{params.switch}.mix(ch_B).set{ch_cho}
+
+process C {
+
+  debug true
+
+  input:
+  val(foo) from ch_cho
+
+  shell:
+  '''
+  echo !{foo}'cho'
+  '''
+}
