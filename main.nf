@@ -42,9 +42,9 @@ process runFastqc {
 	'''
 }
 
+//2023 note - you do not need the `.view()`, this is only needed if you want to view the output of the input channel below
 ch_dummy1.view().into { ch_into_trim1; ch_switch1 }
 ch_dummy2.view().into { ch_into_trim2; ch_switch2 }
-
 
 process removePrimersAdapters {
 	
