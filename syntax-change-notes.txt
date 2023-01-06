@@ -9,9 +9,9 @@ There are 2 different examples of the same process below, the first uses the `mu
 Both do the same thing
 */
 
-//USING MULTIMAP
-
 params.switch = false
+
+//USING MULTIMAP
 
 process A {
 
@@ -26,6 +26,7 @@ process A {
   echo $foo
   '''
 }
+
 ch_foo.multiMap { it -> foo: bar: it }.set { ch_switch }
 
 process B {
@@ -39,10 +40,11 @@ process B {
   val(foo) from ch_switch.bar
 
   output:
-  val(foo) into ch_B
+  env(bar) into ch_B
 
   shell:
   '''
+  bar=!{foo}'bar'
   echo !{foo}'bar'
   '''
 }
@@ -54,16 +56,15 @@ process C {
   debug true
 
   input:
-  val(foo) from ch_cho
+  val(either) from ch_cho
 
   shell:
   '''
-  echo !{foo}'cho'
+  echo !{either}'cho'
   '''
 }
 
 //USING IMPLICIT FORKING
-params.switch = false
 
 process A {
 
@@ -78,6 +79,7 @@ process A {
   echo $foo
   '''
 }
+
 process B {
   
   debug true
@@ -89,10 +91,11 @@ process B {
   val(foo) from ch_foo
 
   output:
-  val(foo) into ch_bar
+  env(bar) into ch_bar
 
   shell:
   '''
+  bar=!{foo}'bar'
   echo !{foo}'bar'
   '''
 }
@@ -104,10 +107,10 @@ process C {
   debug true
 
   input:
-  val(foo) from ch_cho
+  val(either) from ch_cho
 
   shell:
   '''
-  echo !{foo}'cho'
+  echo !{either}'cho'
   '''
 }
