@@ -49,6 +49,7 @@ The .view() operator is only needed if you want to view the contents of the ch_d
 Old method:
 ch_dummy1.view().into { ch_into_trim1; ch_switch1 }
 ch_dummy2.view().into { ch_into_trim2; ch_switch2 }
+*/
 
 //This means take the output ch_dummy and send it to 2 channels, ch_into_trim1 and ch_switch1
 ch_dummy1.into { ch_into_trim1; ch_switch1 }
